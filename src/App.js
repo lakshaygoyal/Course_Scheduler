@@ -4,6 +4,10 @@ import Sidebar from './Sidebar';
 import CourseArea from './CourseArea';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
+import Recommender from'./Recommender';
+import Accordion from 'react-bootstrap/Accordion';
+import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
 
 class App extends React.Component {
   constructor(props) {
@@ -12,7 +16,10 @@ class App extends React.Component {
       allCourses: [],
       filteredCourses: [],
       subjects: [],
-      cartCourses: {}
+      cartCourses: {},
+      interests: [],
+      completedCourses: [],
+      ratedCourses: []
     };
   }
 
@@ -25,10 +32,44 @@ class App extends React.Component {
   async loadInitialState(){
     let courseURL = "http://mysqlcs639.cs.wisc.edu:53706/api/react/classes";
     let courseData = await (await fetch(courseURL)).json()
+    let completedCourseURL = "http://mysqlcs639.cs.wisc.edu:53706/api/react/students/5022025924/classes/completed";
+    let compleletedCoursesData = await (await fetch(completedCourseURL)).json()
 
 
-    this.setState({allCourses: courseData, filteredCourses: courseData, subjects: this.getSubjects(courseData)});
+    this.setState({allCourses: courseData, filteredCourses: courseData, subjects: this.getSubjects(courseData), interests: this.getInterests(courseData), completedCourses: compleletedCoursesData.data});
+    
   }
+
+  getInterests(data){
+    let interests = [];
+    interests.push("All");
+
+    for(let i=0; i < data.length; i++){
+      data[i].keywords.forEach((keyword) => {
+        if(interests.indexOf(keyword) === -1)
+          interests.push(keyword);
+        })
+        if(interests.indexOf(data[i].subject) === -1)
+          interests.push(data[i].subject);
+      
+    }
+    
+    return interests;
+
+  }
+  rateCourse(data){
+    let ratedCoursesTemp = this.state.ratedCourses
+    
+      if(ratedCoursesTemp.indexOf(data)===-1){
+
+        ratedCoursesTemp.push(data)
+        this.setState({ratedCourses:ratedCoursesTemp})
+        
+      }
+      return;
+
+  }
+
 
 
   getSubjects(data) {
@@ -133,7 +174,6 @@ class App extends React.Component {
 
   getCartData() {
     let cartData = [];
-
     for(const courseKey of Object.keys(this.state.cartCourses)) {
       let course = this.state.allCourses.find((x) => {return x.number === courseKey})
 
@@ -153,17 +193,102 @@ class App extends React.Component {
           crossOrigin="anonymous"
         />
 
-        <Tabs defaultActiveKey="search" style={{position: 'fixed', zIndex: 1, width: '100%', backgroundColor: 'white'}}>
-          <Tab eventKey="search" title="Search" style={{paddingTop: '5vh'}}>
-            <Sidebar setCourses={(courses) => this.setCourses(courses)} courses={this.state.allCourses} subjects={this.state.subjects}/>
+        <Tabs defaultActiveKey="Search" style={{position: 'fixed', zIndex: 1, width: '100%', backgroundColor: 'white'}}>
+          <Tab eventKey="Search" title="Search" style={{paddingTop: '5vh'}}>
+            <Sidebar setCourses={(courses) => this.setCourses(courses)} courses={this.state.allCourses} subjects={this.state.subjects} interests={this.state.interests}/>
             <div style={{marginLeft: '20vw'}}>
-              <CourseArea data={this.state.filteredCourses} addCartCourse={(data) => this.addCartCourse(data)} removeCartCourse={(data) => this.removeCartCourse(data)} cartCourses={this.state.cartCourses}/>
+              <CourseArea id="Search"data={this.state.filteredCourses} addCartCourse={(data) => this.addCartCourse(data)} removeCartCourse={(data) => this.removeCartCourse(data)} cartCourses={this.state.cartCourses}/>
             </div>
           </Tab>
-          <Tab eventKey="cart" title="Cart" style={{paddingTop: '5vh'}}>
+
+          <Tab eventKey="Cart" title="Cart" style={{paddingTop: '5vh'}}>
             <div style={{marginLeft: '20vw'}}>
-              <CourseArea data={this.getCartData()} addCartCourse={(data) => this.addCartCourse(data)} removeCartCourse={(data) => this.removeCartCourse(data)} cartCourses={this.state.cartCourses}/>
+              <CourseArea identifier="Cart" allCourses={this.state.allCourses} completedCourses={this.state.completedCourses} data={this.getCartData()} addCartCourse={(data) => this.addCartCourse(data)} removeCartCourse={(data) => this.removeCartCourse(data)} cartCourses={this.state.cartCourses}/>
             </div>
+          </Tab>
+
+          <Tab eventKey="CompletedCourses" title="CompletedCourses" style={{paddingTop: '5vh'}}>
+            <div style={{marginLeft: '20vw'}}>
+              <CourseArea id="Completed Course" completedCourses={this.state.completedCourses} courseData={this.state.allCourses} rateCourse={(data) => this.rateCourse(data)}/>
+            </div>
+          </Tab>
+          <Tab eventKey="RecommendedCourses" title="RecommendedCourses" style={{paddingTop: '5vh'}}>
+            <div style={{marginLeft: '20vw'}}>
+              <Recommender allCourses={this.state.allCourses} completedCourses={this.state.completedCourses} ratedCourses={this.state.ratedCourses} />
+            </div>
+          </Tab>
+          <Tab eventKey="Help" title="Help" style={{paddingTop: '5vh'}}>
+            <div style={{marginLeft: '20vw'}}>
+              <div  class = "col-md-3">
+
+              </div>
+              <div class= "col-md-9">
+              <Accordion >
+                <Card>
+                  <Card.Header>
+                    <Accordion.Toggle as={Button} variant="link" eventKey="0">
+                      Search and filter
+                    </Accordion.Toggle>
+                  </Card.Header>
+                  <Accordion.Collapse eventKey="0">
+                    <Card.Body>
+                      For Searcha and Filter you can use four features:
+                      <ul>
+                        <li>
+                          Search : you can tyoe the keyword to search all the courses related to that keyword.
+                        </li>
+                        <li>
+                          Subject: you can use a particular subject to list down all courses of that subject.
+                        </li>
+                        <li>
+                          Interest Areas: you can use a particular interest to list down all courses realted to that particular interest.
+                        </li>
+                        <li>
+                          Credits: you can search ocurse based of the number of credits.
+                        </li>
+                      </ul>
+
+
+                    </Card.Body>
+                  </Accordion.Collapse>
+                </Card>
+                <Card>
+                  <Card.Header>
+                    <Accordion.Toggle as={Button} variant="link" eventKey="1">
+                      Cart
+                    </Accordion.Toggle>
+                  </Card.Header>
+                  <Accordion.Collapse eventKey="1">
+                    <Card.Body>You can see all the courses or sections or subsections of the courses added in this.</Card.Body>
+                  </Accordion.Collapse>
+                </Card>
+                <Card>
+                  <Card.Header>
+                    <Accordion.Toggle as={Button} variant="link" eventKey="2">
+                      Completed Courses
+                    </Accordion.Toggle>
+                  </Card.Header>
+                  <Accordion.Collapse eventKey="3">
+                    <Card.Body>All the courses previously taken can be seen here.</Card.Body>
+                  </Accordion.Collapse>
+                </Card>
+                <Card>
+                  <Card.Header>
+                    <Accordion.Toggle as={Button} variant="link" eventKey="3">
+                      Recommender
+                    </Accordion.Toggle>
+                  </Card.Header>
+                  <Accordion.Collapse eventKey="3">
+                    <Card.Body>You can get recomendation based on your arting sof previously taken courses.</Card.Body>
+                  </Accordion.Collapse>
+                </Card>
+              </Accordion>
+              </div>
+              <div  class = "col-md-3">
+
+              </div>
+              
+             </div>
           </Tab>
         </Tabs>
       </>

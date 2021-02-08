@@ -11,14 +11,15 @@ class Sidebar extends React.Component {
     }
     this.searchAndFilter = new SearchAndFilter();
     this.subject = React.createRef();
+    this.interest = React.createRef();
     this.minimumCredits = React.createRef();
     this.maximumCredits = React.createRef();
     this.search = React.createRef();
   }
 
   setCourses() {
-    if(this.subject.current != null && this.minimumCredits.current != null && this.maximumCredits.current != null) {
-      this.props.setCourses(this.searchAndFilter.searchAndFilter(this.props.courses,this.search.current.value, this.subject.current.value, this.minimumCredits.current.value, this.maximumCredits.current.value));
+    if(this.subject.current != null && this.minimumCredits.current != null && this.maximumCredits.current != null && this.interest.current != null) {
+      this.props.setCourses(this.searchAndFilter.searchAndFilter(this.props.courses,this.search.current.value, this.subject.current.value, this.minimumCredits.current.value, this.maximumCredits.current.value, this.interest.current.value));
     }
   }
 
@@ -45,7 +46,14 @@ class Sidebar extends React.Component {
     return subjectOptions;
   }
 
-  
+  getInterestOptions(){
+    let interestOptions = [];
+    for(const interest of this.props.interests) {
+      interestOptions.push(<option key={interest}>{interest}</option>);
+    }
+
+    return interestOptions;
+  }
 
 
 
@@ -67,8 +75,15 @@ class Sidebar extends React.Component {
 
               <Form.Group controlId="formSubject">
                 <Form.Label>Subject</Form.Label>
-                <Form.Control as="select" ref={this.subject} onClick={() => this.setCourses()}>
+                <Form.Control as="select" ref={this.subject} onChange={() => this.setCourses()}>
                   {this.getSubjectOptions()}
+                </Form.Control>
+              </Form.Group>
+
+              <Form.Group controlId="formInterest">
+                <Form.Label>Interest Areas</Form.Label>
+                <Form.Control as="select" ref={this.interest} onChange={() => this.setCourses()}>
+                  {this.getInterestOptions()}
                 </Form.Control>
               </Form.Group>
 

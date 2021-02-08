@@ -4,6 +4,7 @@ import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
+import Alert from 'react-bootstrap/Alert'
 
 class Course extends React.Component {
   constructor(props) {
@@ -14,10 +15,34 @@ class Course extends React.Component {
     }
   }
 
+  checkCourse(){
+    let completedCourses= this.props.completedCourses;
+    let data= this.props.data;
+    let alert=[];
+    if(this.props.identifier === "Cart"){
+      for(let i =0; i<completedCourses.length; i++){
+        if(data.number === completedCourses[i]){
+          alert.push(<Alert variant="warning">Course Previously taken</Alert>);
+          return alert;
+        }
+      }
+      for(let i=0; i<data.requisites.length; i++){
+        for( let j=0; j< data.requisites[i].length; j++){
+          if(completedCourses.indexOf(data.requisites[i][j]) ===-1){
+            alert.push(<Alert variant="warning">Caution:Pre-requisites not met.</Alert>);
+            return alert;
+          }
+        }
+      }
+    }
+    return alert;
+  }
+
   render() {
     return (
       <Card style={{width: '33%', marginTop: '5px', marginBottom: '5px'}}>
         <Card.Body>
+          {this.checkCourse()}
           <Card.Title>
             <div style={{maxWidth: 250}}>
               {this.props.data.name}
@@ -26,7 +51,7 @@ class Course extends React.Component {
           </Card.Title>
           <Card.Subtitle className="mb-2 text-muted">{this.props.data.number} - {this.getCredits()}</Card.Subtitle>
           {this.getDescription()}
-          <Button variant='dark' onClick={() => this.openModal()}>View sections</Button>
+          <Button variant='outline-info' onClick={() => this.openModal()}>View sections</Button>
         </Card.Body>
         <Modal show={this.state.showModal} onHide={() => this.closeModal()} centered>
           <Modal.Header closeButton>
@@ -37,7 +62,7 @@ class Course extends React.Component {
           </Modal.Body>
           <Modal.Footer>
             {this.getCourseButton()}
-            <Button variant="secondary" onClick={() => this.closeModal()}>
+            <Button variant="outline-warning" onClick={() => this.closeModal()}>
               Close
             </Button>
           </Modal.Footer>
@@ -47,12 +72,12 @@ class Course extends React.Component {
   }
 
   getCourseButton() {
-    let buttonVariant = 'dark';
+    let buttonVariant = 'outline-success';
     let buttonOnClick = () => this.addCourse();
     let buttonText = 'Add Course';
 
     if(this.props.courseKey in this.props.cartCourses) {
-      buttonVariant = 'outline-dark';
+      buttonVariant = 'outline-danger';
       buttonOnClick = () => this.removeCourse();
       buttonText = 'Remove Course'
     }
@@ -93,13 +118,13 @@ class Course extends React.Component {
   }
 
   getSectionButton(section) {
-    let buttonVariant = 'dark';
+    let buttonVariant = 'outline-success';
     let buttonOnClick = (e) => this.addSection(e, section);
     let buttonText = 'Add Section';
 
     if(this.props.courseKey in this.props.cartCourses) {
       if(section in this.props.cartCourses[this.props.courseKey]) {
-        buttonVariant = 'outline-dark';
+        buttonVariant = 'outline-danger';
         buttonOnClick = (e) => this.removeSection(e, section);
         buttonText = 'Remove Section';
       }
@@ -109,6 +134,7 @@ class Course extends React.Component {
   }
 
   addCourse() {
+    alert("Course added");
     this.props.addCartCourse (
       {
         course: this.props.courseKey
@@ -117,6 +143,7 @@ class Course extends React.Component {
   }
 
   removeCourse() {
+    alert("Course removed");
     this.props.removeCartCourse (
       {
         course: this.props.courseKey
@@ -126,6 +153,7 @@ class Course extends React.Component {
 
   addSection(e, section) {
     e.stopPropagation();
+    alert("Course Section added");
     this.props.addCartCourse (
       {
         course: this.props.courseKey,
@@ -136,6 +164,7 @@ class Course extends React.Component {
 
   removeSection(e, section) {
     e.stopPropagation();
+    alert("Course Section removed");
     this.props.removeCartCourse (
       {
         course: this.props.courseKey,
@@ -146,6 +175,7 @@ class Course extends React.Component {
 
   addSubsection(e, section, subsection) {
     e.stopPropagation();
+    alert("Course Sub-Section added");
     this.props.addCartCourse (
       {
         course: this.props.courseKey,
@@ -157,6 +187,7 @@ class Course extends React.Component {
 
   removeSubsection(e, section, subsection) {
     e.stopPropagation();
+    alert("Course Sub-Section removed");
     this.props.removeCartCourse (
       {
         course: this.props.courseKey,
@@ -194,14 +225,14 @@ class Course extends React.Component {
   }
 
   getSubsectionButton(section, subsection) {
-    let buttonVariant = 'dark';
+    let buttonVariant = 'outline-success';
     let buttonOnClick = (e) => this.addSubsection(e, section, subsection);
     let buttonText = 'Add Subsection';
 
     if(this.props.courseKey in this.props.cartCourses) {
       if(section in this.props.cartCourses[this.props.courseKey]) {
         if(this.props.cartCourses[this.props.courseKey][section].indexOf(subsection) > -1) {
-          buttonVariant = 'outline-dark';
+          buttonVariant = 'outline-danger';
           buttonOnClick = (e) => this.removeSubsection(e, section, subsection);
           buttonText = 'Remove Subsection';
         }
@@ -253,6 +284,4 @@ class Course extends React.Component {
     else
       return this.props.data.credits + ' credits';
   }
-}
-
-export default Course;
+}export default Course;
